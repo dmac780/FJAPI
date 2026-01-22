@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FJAPI Dashboard</title>
+    <style>
+        :root {
+            --bg: #020617; /* Even darker */
+            --card-bg: #0f172a;
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --border: #1e293b;
+            --accent: #38bdf8;
+            --table-head: #1e293b;
+            --table-hover: #334155;
+            --error-bg: #450a0a;
+            --error-border: #991b1b;
+        }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 1rem;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1400px; 
+            margin: 0 auto; 
+        }
+        header { 
+            margin-bottom: 2rem; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1rem; 
+        }
+        .header-top { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            width: 100%; 
+        }
+        h1 { 
+            margin: 0; 
+            font-size: 1.25rem; 
+            font-weight: 700; 
+            letter-spacing: -0.025em; 
+            color: var(--accent); 
+        }
+        .meta { 
+            color: var(--text-muted); 
+            font-size: 0.7rem; 
+            font-family: monospace; 
+            text-transform: uppercase; 
+            letter-spacing: 0.1em; 
+        }
+        .query-bar {
+            background: #000000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 0.85rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .query-label {
+            background: var(--accent);
+            color: var(--bg);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 800;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+        }
+        #query-path {
+            color: #94a3b8;
+            word-break: break-all;
+        }
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        @media (min-width: 1024px) {
+            .main-layout {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+            .content-area {
+                flex: 1;
+                min-width: 0;
+            }
+            .cookbook { 
+                width: 320px; 
+                position: sticky; 
+                top: 2rem;
+                background: rgba(15, 23, 42, 0.5);
+                padding: 1.5rem;
+                border-radius: 12px;
+                border: 1px solid var(--border);
+            }
+        }
+        #scorecards { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 1rem; 
+            margin-bottom: 2rem; 
+        }
+        .card { 
+            background: var(--card-bg); 
+            padding: 1rem 1.25rem; 
+            border-radius: 12px; 
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+        .card-label { 
+            color: var(--text-muted); 
+            font-size: 0.65rem; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+            margin-bottom: 0.25rem;
+        }
+        .card-value { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            color: var(--text);
+            line-height: 1;
+        }
+        @media (max-width: 640px) {
+            #scorecards { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 0.5rem; 
+                margin-bottom: 1rem; 
+            }
+            .card { padding: 0.75rem; }
+            .card-value { font-size: 1.1rem; }
+            .card-label { font-size: 0.55rem; }
+        }
+        .table-container { 
+            background: var(--card-bg); 
+            border-radius: 12px; 
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            text-align: left; 
+            font-size: 0.8rem; 
+        }
+        th { 
+            background: var(--table-head); 
+            padding: 0.75rem 1rem; 
+            font-weight: 600; 
+            color: var(--accent); 
+            border-bottom: 1px solid var(--border);
+            text-transform: capitalize;
+        }
+        td { 
+            padding: 0.75rem 1rem; 
+            border-bottom: 1px solid var(--border); 
+            vertical-align: top; 
+            color: var(--text-muted); 
+        }
+        tr:last-child td { 
+            border-bottom: none; 
+        }
+        tr:hover td { 
+            background: var(--table-hover); 
+            color: var(--text); 
+        }
+
+        .empty-state { 
+            padding: 4rem; 
+            text-align: center; 
+            color: var(--text-muted); 
+        }
+        .badge { 
+            padding: 0.2rem 0.4rem; 
+            background: var(--bg); 
+            border: 1px solid var(--border);
+            border-radius: 4px; 
+            font-size: 0.7rem; 
+            font-family: monospace; 
+            color: var(--accent);
+        }
+        .cookbook-title { 
+            font-size: 0.7rem; 
+            font-weight: 700; 
+            color: var(--accent); 
+            text-transform: uppercase; 
+            letter-spacing: 0.1em; 
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        /* Mobile Specifics */
+        @media (max-width: 1023px) {
+            .cookbook {
+                order: -1; /* Move to top on mobile */
+                background: var(--card-bg);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 1rem;
+            }
+            .cookbook-grid { display: none; }
+            .cookbook.open .cookbook-grid { 
+                display: grid; 
+                grid-template-columns: 1fr;
+                margin-top: 1rem;
+            }
+            .cookbook-title::after {
+                content: '▼';
+                font-size: 0.6rem;
+                margin-left: auto;
+                transition: transform 0.2s;
+            }
+            .cookbook.open .cookbook-title::after {
+                transform: rotate(180deg);
+            }
+        }
+        @media (min-width: 1024px) {
+            .cookbook-grid { 
+                display: grid; 
+                grid-template-columns: 1fr; 
+                gap: 0.5rem; 
+            }
+            .cookbook-title::after { 
+                display: none;
+            }
+        }
+        .query-chip {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.6rem;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            transition: all 0.2s ease;
+        }
+        .query-chip:hover {
+            border-color: var(--accent);
+            background: var(--table-hover);
+        }
+        .chip-label { 
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chip-sql {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+        /* Error Styles */
+        .error-box {
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+            color: #fecaca;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        /* Detail/Expand Styles */
+        .detail-row td {
+            padding: 0 !important;
+            background: #111111 !important; }
+        .detail-content { 
+            padding: 1.5rem; 
+            border-left: 4px solid var(--accent); 
+            background: rgba(56, 189, 248, 0.03); 
+            animation: slideIn 0.2s ease-out;
+        }
+        .detail-content pre { 
+            margin: 0; 
+            font-family: 'Fira Code', monospace; 
+            font-size: 0.7rem; 
+            color: #94a3b8; 
+            white-space: pre-wrap; 
+            word-break: break-all;
+        }
+        .clickable {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .clickable:hover, .clickable.active { 
+            background: var(--accent);
+            color: var(--bg);
+            border-color:
+            var(--accent);
+        }
+        .clickable svg {
+            transition: transform 0.2s ease;
+        }
+        .clickable.active svg {
+            transform: rotate(180deg);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>FJAPI Data Explorer</h1>
+                <div id="timestamp" class="meta"></div>
+            </div>
+            <div class="query-bar">
+                <span class="query-label">QUERY</span>
+                <div id="query-path">Loading query...</div>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="content-area">
+                <div id="error-display"></div>
+                <div id="scorecards">
+                    <div class="card">
+                        <div class="card-label">Total Rows</div>
+                        <div id="stat-rows" class="card-value">0</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Active Joins</div>
+                        <div id="stat-joins" class="card-value">0</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-label">Active Filters</div>
+                        <div id="stat-filters" class="card-value">0</div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="data-table">
+                        <thead id="table-head"></thead>
+                        <tbody id="table-body">
+                            <tr><td class="empty-state">Waiting for query processing...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <aside class="cookbook" id="cookbook-sidebar">
+                <div class="cookbook-title" onclick="toggleCookbook()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    Quick Queries
+                </div>
+                <div class="cookbook-grid">
+                    <a href="?use=db&from=users" class="query-chip">
+                        <span class="chip-label">SELECT * FROM users</span>
+                        <span class="chip-sql">?use=db&from=users</span>
+                    </a>
+                    <a href="?use=db&from=posts&select=id,title" class="query-chip">
+                        <span class="chip-label">SELECT id, title FROM posts</span>
+                        <span class="chip-sql">?use=db&from=posts&select=id,title</span>
+                    </a>
+                    <a href="?use=db&from=posts&join=user" class="query-chip">
+                        <span class="chip-label">JOIN posts with user</span>
+                        <span class="chip-sql">?use=db&from=posts&join=user</span>
+                    </a>
+                    <a href="?use=db&from=posts&select=id,title=post_heading" class="query-chip">
+                        <span class="chip-label">SELECT with Aliasing</span>
+                        <span class="chip-sql">?use=db&from=posts&select=...</span>
+                    </a>
+                    <a href="?use=db&from=posts&join=tags" class="query-chip">
+                        <span class="chip-label">JOIN posts with tags (M2M Array)</span>
+                        <span class="chip-sql">?use=db&from=posts&join=tags</span>
+                    </a>
+                    <a href="?use=db&from=posts&join=user&select=title,user__first_name=author" class="query-chip">
+                        <span class="chip-label">SELECT from Joined Table</span>
+                        <span class="chip-sql">?use=db&from=posts&join=user...</span>
+                    </a>
+                    <a href="?use=db&from=posts&join=tags&select=title,COUNT__tags=tag_count" class="query-chip">
+                        <span class="chip-label">Relational Count (COUNT__tags)</span>
+                        <span class="chip-sql">?use=db&from=posts&join=tags...</span>
+                    </a>
+                    <a href="?use=db&from=posts&where=published=1" class="query-chip">
+                        <span class="chip-label">SELECT from posts WHERE published = 1</span>
+                        <span class="chip-sql">?use=db&from=posts&where=...</span>
+                    </a>
+                    <a href="?use=db&from=posts&where=id BETWEEN 101,110 AND published=1" class="query-chip">
+                        <span class="chip-label">Complex Filtering (2 Filters)</span>
+                        <span class="chip-sql">?use=db&from=posts&where=...</span>
+                    </a>
+                    <a href="?use=db&from=posts&select=SUM__id=Total_Score,AVG__id=Avg_Score&count=1" class="query-chip">
+                        <span class="chip-label">Aggregations & Math</span>
+                        <span class="chip-sql">?use=db&from=posts&select=SUM...</span>
+                    </a>
+                    <a href="?use=db&from=users&orderby=first_name&sortby=DESC" class="query-chip">
+                        <span class="chip-label">Order by Name DESC</span>
+                        <span class="chip-sql">?use=db&from=users&orderby=...</span>
+                    </a>
+                    <a href="?use=db&from=comments&groupby=post_id&count=1" class="query-chip">
+                        <span class="chip-label">Group comments by Post ID</span>
+                        <span class="chip-sql">?use=db&from=comments&groupby=...</span>
+                    </a>
+                    <a href="?use=db&from=posts&limit=3" class="query-chip">
+                        <span class="chip-label">Pagination (Limit 3)</span>
+                        <span class="chip-sql">?use=db&from=posts&limit=3</span>
+                    </a>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const tableHead    = document.getElementById('table-head');
+        const tableBody    = document.getElementById('table-body');
+        const errorDisplay = document.getElementById('error-display');
+        const queryPath    = document.getElementById('query-path');
+        const timestamp    = document.getElementById('timestamp');
+        const statRows     = document.getElementById('stat-rows');
+        const statJoins    = document.getElementById('stat-joins');
+        const statFilters  = document.getElementById('stat-filters');
+        const cookbook     = document.getElementById('cookbook-sidebar');
+        let currentData    = null;
+
+        function toggleCookbook() {
+            if (window.innerWidth < 1024) {
+                cookbook.classList.toggle('open');
+            }
+        }
+
+        // Helper to format values
+        const formatValue = (val, rowId, field) => {
+            if (val === null || val === undefined) return `<span class="meta">null</span>`;
+            if (typeof val === 'object' && val !== null) {
+                const label = Array.isArray(val) ? 'Array' : 'Object';
+                return `
+                    <span class="badge clickable" onclick="expandCell('${rowId}', '${field}', this)" style="display:inline-flex; align-items:center; gap:0.25rem">
+                        ${label}
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </span>`;
+            }
+            return val;
+        };
+
+        function expandCell(rowId, field, el) {
+            const tr = el.closest('tr');
+            const existingDetail = tr.nextElementSibling;
+            
+            // If already expanded for this specific field, just close it
+            if (existingDetail && existingDetail.classList.contains('detail-row')) {
+                const isSameField = tr.dataset.expanded === field;
+                existingDetail.remove();
+                tr.dataset.expanded = "";
+                tr.querySelectorAll('.clickable').forEach(btn => btn.classList.remove('active'));
+                if (isSameField) return;
+            }
+
+            // Mark as active
+            tr.querySelectorAll('.clickable').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+            tr.dataset.expanded = field;
+            
+            // Get data
+            let val;
+            if (rowId === 'SINGLE_ROW') {
+                val = currentData[field];
+            } else {
+                val = currentData[rowId][field];
+            }
+
+            const detailTr = document.createElement('tr');
+            detailTr.className = 'detail-row';
+            const detailTd = document.createElement('td');
+            detailTd.colSpan = tr.cells.length;
+            
+            detailTd.innerHTML = `
+                <div class="detail-content">
+                    <pre>${JSON.stringify(val, null, 2)}</pre>
+                </div>
+            `;
+            detailTr.appendChild(detailTd);
+            tr.after(detailTr);
+        }
+
+        // when namespace window.renderFJAPI exists default JSON output disabled for FJAPI
+        window.renderFJAPI = (data) => {
+            currentData = data;
+            timestamp.innerText = new Date().toLocaleTimeString();
+            queryPath.innerText = window.location.search;
+            
+            const params = new URLSearchParams(window.location.search);
+            
+            // Calculate Stats
+            const joinStr     = params.get('join') || '';
+            const joinCount   = joinStr ? joinStr.split(',').length : 0;
+            const whereStr    = params.get('where') || '';
+            const filterCount = whereStr ? (whereStr.match(/ AND | OR /gi)?.length || 0) + 1 : 0;
+
+            statJoins.innerText   = joinCount;
+            statFilters.innerText = filterCount;
+
+            // Clear previous table
+            errorDisplay.innerHTML = '';
+            tableHead.innerHTML    = '';
+            tableBody.innerHTML    = '';
+
+            if (data.error) {
+                errorDisplay.innerHTML = `<div class="error-box"><strong>Query Error:</strong> ${data.error}</div>`;
+                statRows.innerText = '0';
+                return;
+            }
+
+            // Case 1: Data is an Array (Standard List)
+            if (Array.isArray(data)) {
+                statRows.innerText = data.length;
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td class="empty-state">No results found matching your query.</td></tr>';
+                    return;
+                }
+
+                // Build Table
+                const keys = Object.keys(data[0]);
+                const headerRow = document.createElement('tr');
+                keys.forEach(key => {
+                    headerRow.innerHTML += `<th>${key.replace(/_/g, ' ')}</th>`;
+                });
+                tableHead.appendChild(headerRow);
+
+                data.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    keys.forEach(key => {
+                        const td = document.createElement('td');
+                        td.innerHTML = formatValue(row[key], index, key);
+                        tr.appendChild(td);
+                    });
+                    tableBody.appendChild(tr);
+                });
+            } 
+            // Case 2: Data is an Object (Aggregations or Grouped results)
+            else {
+                const keys = Object.keys(data);
+                const isGrouped = !!params.get('groupby');
+
+                if (isGrouped) {
+                    statRows.innerText = keys.length;
+                    const groupField = params.get('groupby').replace(/__/g, ' ');
+                    const countAlias = params.get('count')?.split('=')[1] || 'count';
+                    const firstVal   = data[keys[0]];
+                    const isComplex  = typeof firstVal === 'object' && firstVal !== null;
+                    const subKeys    = isComplex ? Object.keys(firstVal) : [countAlias];
+
+                    const headerRow = document.createElement('tr');
+                    headerRow.innerHTML = `<th>${groupField}</th>`;
+                    subKeys.forEach(sk => headerRow.innerHTML += `<th>${sk.replace(/_/g, ' ')}</th>`);
+                    tableHead.appendChild(headerRow);
+
+                    keys.forEach(key => {
+                        const tr = document.createElement('tr');
+                        const keyTd = document.createElement('td');
+                        keyTd.innerText = key;
+                        tr.appendChild(keyTd);
+                        
+                        if (isComplex) {
+                            subKeys.forEach(sk => {
+                                const td = document.createElement('td');
+                                td.innerHTML = formatValue(data[key][sk], key, sk);
+                                tr.appendChild(td);
+                            });
+                        } else {
+                            const td = document.createElement('td');
+                            td.innerHTML = formatValue(data[key], key, countAlias);
+                            tr.appendChild(td);
+                        }
+                        tableBody.appendChild(tr);
+                    });
+                } else {
+                    // Global Aggregations - Move to Table
+                    statRows.innerText = data.count || data.total_rows || 1;
+                    
+                    const headerRow = document.createElement('tr');
+                    keys.forEach(key => {
+                        headerRow.innerHTML += `<th>${key.replace(/_/g, ' ')}</th>`;
+                    });
+                    tableHead.appendChild(headerRow);
+
+                    const tr = document.createElement('tr');
+                    keys.forEach(key => {
+                        const td = document.createElement('td');
+                        td.innerHTML = formatValue(data[key], 'SINGLE_ROW', key);
+                        tr.appendChild(td);
+                    });
+                    tableBody.appendChild(tr);
+                }
+            }
+        };
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>

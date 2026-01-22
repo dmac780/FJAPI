@@ -15,6 +15,17 @@ You can test FJAPI immediately without installation by visiting the demo reposit
 - [https://dmac780.github.io/FJAPI/?use=db&from=posts&where=published=1](https://dmac780.github.io/FJAPI/?use=db&from=posts&where=published=1)
 - [https://dmac780.github.io/FJAPI/?use=db&select=id,title,tags&from=posts&join=tags](https://dmac780.github.io/FJAPI/?use=db&select=id,title,tags&from=posts&join=tags)
 
+### GUI Dashboard Example
+
+**Dashboard Demo**: [https://dmac780.github.io/FJAPI/dashboard.html?use=db&from=users](https://dmac780.github.io/FJAPI/dashboard.html?use=db&from=users)
+
+Dashboard demonstrates:
+- Real-time query building with FJAPI
+- How to create custom interfaces using the `window.renderFJAPI()` function
+- Dynamic table rendering and filtering
+
+**Note**: The dashboard demo uses the example database from the FJAPI repository to showcase functionality. When you deploy your own FJAPI instance, you can create similar dashboards using `window.renderFJAPI()` to programmatically render query results into custom HTML elements and build interactive data applications.
+
 ## Database Schema Design
 
 FJAPI uses a "Convention over Configuration" approach to handle relationships. To enable automatic joins, structure your JSON following these rules:

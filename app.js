@@ -468,6 +468,13 @@ function applyHaving(groups, havingStr, countAlias) {
  * @param {Object|Array} data - The data to output as JSON.
  */
 function outputJSON(data) {
+  // If a dashboard hook exists, hand the data to it and exit
+  if (typeof window.renderFJAPI === "function") {
+    window.renderFJAPI(data);
+    return;
+  }
+
+  // Default: Dump raw JSON to body for testing/visual check
   document.body.innerHTML = "";
   document.body.textContent = JSON.stringify(data, null, 2);
   document.body.style.whiteSpace = "pre";
