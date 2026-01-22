@@ -44,22 +44,6 @@ FJAPI uses a "Convention over Configuration" approach to handle relationships. T
 4. **Hosting**: Enable GitHub Pages in the repository settings.
 5. **Usage**: Visit your deployed GitHub Pages URL and append query parameters to explore and filter your data directly in the browser.
 
-## Limitations
-
-FJAPI is a **client-side only** application. Because the query engine runs entirely in the browser's JavaScript engine, the data cannot be fetched via standard `fetch()` or `curl` calls from other applications. 
-
-When you request an FJAPI URL, you receive the `index.html` file. The data is only populated into the page after the browser executes `app.js`. For this reason, FJAPI is best used as a standalone data explorer, a live database reporting site, or a reference tool during development.
-
-## Use Cases
-
-While FJAPI cannot be consumed as a REST API for other apps, it is a powerful tool for:
-- **Public Dashboards**: Create live, queryable views of public datasets.
-- **Data Documentation**: Provide a way for users to explore and filter your project's data without needing a backend.
-- **Static Site Database**: Use it as the primary data interface for standalone reporting tools hosted on GitHub Pages.
-- **Mockup Validation**: Test complex relational queries against your schema using real data before building a full API.
-
-
-
 ## Query Parameters
 
 | Parameter | Function | Example |
