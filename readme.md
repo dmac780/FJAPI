@@ -1,6 +1,6 @@
 # Fake JSON API (FJAPI)
 
-FJAPI is a serverless, browser-based query engine that allows for SQL-like interaction with static JSON files through URL query parameters. It transforms raw JSON files into a relational data source suitable for mocking backends, prototype development, or lightweight data distribution via GitHub Pages.
+FJAPI is a serverless, browser-based query engine that allows for SQL-like interaction with static JSON files through URL query parameters. It transforms raw JSON files into a relational data source suitable for building public dashboards, custom data displays, or standalone database testing directly on GitHub Pages.
 
 > **WARNING**: FJAPI is intended for development, testing, and production use with public data only. All files within the `/data/` directory are publicly accessible once deployed. **Do not store sensitive information, passwords, or private credentials in FJAPI or a Github repo.**
 
@@ -42,41 +42,23 @@ FJAPI uses a "Convention over Configuration" approach to handle relationships. T
 2. **Data Structure**: Create a `/data/` directory and upload your JSON files (e.g., `db.json`).
 3. **Entry Point**: Place `index.html` at the root. Include `app.js` via a `<script>` tag or inline the code.
 4. **Hosting**: Enable GitHub Pages in the repository settings.
-5. **Consumption**: Use the `getFJAPI` function from inside another application (or even another GitHub repository) to fetch and parse data from your deployed FJAPI URL.
+5. **Usage**: Visit your deployed GitHub Pages URL and append query parameters to explore and filter your data directly in the browser.
 
-## External Consumption
+## Limitations
 
-To consume data from another application, fetch the deployed URL and extract the content of the `<body>` tag. Note that all query examples in this documentation are based on the schema and data found in the example `/data/db.json` file.
+FJAPI is a **client-side only** application. Because the query engine runs entirely in the browser's JavaScript engine, the data cannot be fetched via standard `fetch()` or `curl` calls from other applications. 
 
-```javascript
-/**
- * Fetches and parses FJAPI data from a deployed URL.
- * @param {string} url - The full FJAPI query URL.
- * @returns {Promise<Object|Array>} The parsed data object or array.
- */
-async function getFJAPI(url) {
-  const response = await fetch(url);
-  const html = await response.text();
-  
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const data = JSON.parse(doc.body.textContent);
-  
-  return data;
-}
+When you request an FJAPI URL, you receive the `index.html` file. The data is only populated into the page after the browser executes `app.js`. For this reason, FJAPI is best used as a standalone data explorer, a live database reporting site, or a reference tool during development.
 
-// Basic usage: Get all users
-const users = await getFJAPI('https://dmac780.github.io/FJAPI/?use=db&from=users');
+## Use Cases
 
-// Pagination Pattern usage:
-const limit = 5;
-const page = 2;
-const offset = (page - 1) * limit;
-const base = "https://dmac780.github.io/FJAPI/";
-const query = `?use=db&from=posts&limit=${limit}&offset=${offset}`;
+While FJAPI cannot be consumed as a REST API for other apps, it is a powerful tool for:
+- **Public Dashboards**: Create live, queryable views of public datasets.
+- **Data Documentation**: Provide a way for users to explore and filter your project's data without needing a backend.
+- **Static Site Database**: Use it as the primary data interface for standalone reporting tools hosted on GitHub Pages.
+- **Mockup Validation**: Test complex relational queries against your schema using real data before building a full API.
 
-const posts = await getFJAPI(base + query);
-```
+
 
 ## Query Parameters
 
