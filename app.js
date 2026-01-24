@@ -182,6 +182,35 @@ function joinRows(table, rows, joinStr, DB) {
 
 
 /**
+ * Applies join type filtering (INNER JOIN removes rows with null/empty joined data).
+ * @param {Array} rows - The joined rows.
+ * @param {string} joinStr - The join string (comma-separated join fields).
+ * @param {string} joinType - The join type ('left' or 'inner').
+ * @returns {Array} The filtered rows based on join type.
+ */
+function applyJoinType(rows, joinStr, joinType) {
+  if (!joinStr || !joinType || joinType.toLowerCase() === "left") {
+    return rows; // LEFT JOIN is default behavior (keep all rows)
+  }
+  
+  if (joinType.toLowerCase() === "inner") {
+    const joins = joinStr.split(",").map(j => j.trim());
+    return rows.filter(row => {
+      // For INNER JOIN, remove rows where any joined field is null or empty array
+      return joins.every(key => {
+        const joinedVal = row[key];
+        if (joinedVal === null || joinedVal === undefined) return false;
+        if (Array.isArray(joinedVal) && joinedVal.length === 0) return false;
+        return true;
+      });
+    });
+  }
+  
+  return rows; // Unknown join type defaults to LEFT
+}
+
+
+/**
  * Selects specific fields from the rows.
  * @param {Array} rows - The array of rows to select from.
  * @param {string} selectStr - The select string.
@@ -506,6 +535,7 @@ async function serveData() {
     const DB       = await result.json();
     const table    = get("from", "posts");
     const join     = get("join", "");
+    const jointype = get("jointype", "left");
     const whereFn  = parseWhere(get("where", ""));
     const select   = get("select", "");
     const orderby  = get("orderby", "");
@@ -518,10 +548,11 @@ async function serveData() {
     const countRaw = get("count", "0");
     const [isCount, countAlias] = countRaw.split("=");
 
-    // Join -> Filter -> Sort
+    // Join -> Apply Join Type -> Filter -> Sort
     const data      = DB[table] ?? [];
     const joined    = joinRows(table, data, join, DB);
-    const filtered  = joined.filter(whereFn);
+    const withJoinType = applyJoinType(joined, join, jointype);
+    const filtered  = withJoinType.filter(whereFn);
     const sorted    = orderBy(filtered, orderby, sortby);
 
     const hasAggs = select && /^(SUM|AVG|MIN|MAX)__/i.test(select);

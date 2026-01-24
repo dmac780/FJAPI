@@ -63,6 +63,7 @@ FJAPI uses a "Convention over Configuration" approach to handle relationships. T
 | **from** | Specifies the target array (table) | `&from=posts` |
 | **select** | Field selection, aliasing, and counting | `&select=id=pid,COUNT__tags` |
 | **join** | Relational mapping (HasOne, HasMany, Many2Many) | `&join=user,comments,tags` |
+| **jointype** | Join type: `left` (default) or `inner` | `&jointype=inner` |
 | **where** | Filtering (supports =, LIKE, IN, BETWEEN, AND, OR) | `&where=id BETWEEN 1,10` |
 | **groupby** | Data pooling by field or joined field | `&groupby=user__role` |
 | **having** | Conditional filtering on group counts | `&having=count > 1` |
@@ -101,7 +102,8 @@ Automatic discovery of BelongsTo, One-to-Many, and Many-to-Many relationships.
 
 | Relationship | Query |
 | :--- | :--- |
-| **Belongs To** | `?use=db&from=posts&join=user` |
+| **LEFT JOIN (default)** | `?use=db&from=posts&join=user` |
+| **INNER JOIN** | `?use=db&from=posts&join=user&jointype=inner` |
 | **Many-to-Many** | `?use=db&select=id,title,tags&from=posts&join=tags` |
 | **Direct Pivot** | `?use=db&select=tag__*&from=post_tags&where=post_id=101&join=tag` |
 

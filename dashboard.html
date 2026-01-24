@@ -380,8 +380,12 @@
                         <span class="chip-sql">?use=db&from=posts&select=id,title</span>
                     </a>
                     <a href="?use=db&from=posts&join=user" class="query-chip">
-                        <span class="chip-label">JOIN posts with user</span>
+                        <span class="chip-label">JOIN posts with user (LEFT)</span>
                         <span class="chip-sql">?use=db&from=posts&join=user</span>
+                    </a>
+                    <a href="?use=db&from=posts&join=tags&jointype=inner" class="query-chip">
+                        <span class="chip-label">JOIN posts with tags (INNER)</span>
+                        <span class="chip-sql">?use=db&from=posts&join=tags...</span>
                     </a>
                     <a href="?use=db&from=posts&select=id,title=post_heading" class="query-chip">
                         <span class="chip-label">SELECT with Aliasing</span>
