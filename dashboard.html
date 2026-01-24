@@ -6,7 +6,7 @@
     <title>FJAPI Dashboard</title>
     <style>
         :root {
-            --bg: #020617; /* Even darker */
+            --bg: #020617;
             --card-bg: #0f172a;
             --text: #f1f5f9;
             --text-muted: #64748b;
@@ -277,7 +277,6 @@
             color: var(--text-muted);
             opacity: 0.7;
         }
-        /* Error Styles */
         .error-box {
             background: var(--error-bg);
             border: 1px solid var(--error-border);
@@ -286,7 +285,6 @@
             border-radius: 8px;
             margin-bottom: 2rem;
         }
-        /* Detail/Expand Styles */
         .detail-row td {
             padding: 0 !important;
             background: #111111 !important; }
@@ -488,10 +486,10 @@
                 val = currentData[rowId][field];
             }
 
-            const detailTr = document.createElement('tr');
+            const detailTr     = document.createElement('tr');
             detailTr.className = 'detail-row';
-            const detailTd = document.createElement('td');
-            detailTd.colSpan = tr.cells.length;
+            const detailTd     = document.createElement('td');
+            detailTd.colSpan   = tr.cells.length;
             
             detailTd.innerHTML = `
                 <div class="detail-content">
@@ -506,7 +504,7 @@
         window.renderFJAPI = (data) => {
             currentData = data;
             timestamp.innerText = new Date().toLocaleTimeString();
-            queryPath.innerText = window.location.search;
+            queryPath.innerText = decodeURIComponent(window.location.search);
             
             const params = new URLSearchParams(window.location.search);
             
